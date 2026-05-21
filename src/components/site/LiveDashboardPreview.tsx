@@ -12,7 +12,7 @@ import { Bolt, Gauge, Plug, TrendingDown } from "lucide-react";
 function seed() {
   return Array.from({ length: 28 }, (_, i) => ({
     t: i,
-    w: 380 + Math.sin(i / 2.4) * 80 + Math.random() * 60,
+    w: Math.round(380 + Math.sin(i / 2.4) * 80 + (i * 37) % 60),
   }));
 }
 
