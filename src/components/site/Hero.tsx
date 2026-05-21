@@ -1,5 +1,6 @@
 import heroImg from "@/assets/hero-energy.jpg";
 import { ArrowRight, Activity, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { LiveDashboardPreview } from "./LiveDashboardPreview";
 
 export function Hero() {
@@ -42,10 +43,10 @@ export function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-elegant transition-transform hover:-translate-y-0.5">
+              <Link to="/dashboard" className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-elegant transition-transform hover:-translate-y-0.5">
                 Launch dashboard
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </button>
+              </Link>
               <button className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/10">
                 Watch 90s demo
               </button>
