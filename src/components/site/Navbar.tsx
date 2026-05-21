@@ -11,7 +11,7 @@ export function Navbar() {
             <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
               <Zap className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            <span className="text-lg font-semibold tracking-tight text-secondary">
+            <span className="text-lg font-semibold tracking-tight text-foreground">
               Amp<span className="text-primary">Aware</span>
             </span>
           </Link>

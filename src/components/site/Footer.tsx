@@ -10,7 +10,7 @@ export function Footer() {
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
                 <Zap className="h-4 w-4" />
               </span>
-              <span className="text-lg font-semibold tracking-tight text-secondary">
+              <span className="text-lg font-semibold tracking-tight text-foreground">
                 Amp<span className="text-primary">Aware</span>
               </span>
             </div>
@@ -22,7 +22,7 @@ export function Footer() {
             { t: "Resources", l: ["Docs", "API", "Status", "Security"] },
           ].map((c) => (
             <div key={c.t}>
-              <div className="text-sm font-semibold text-secondary">{c.t}</div>
+              <div className="text-sm font-semibold text-foreground">{c.t}</div>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 {c.l.map((i) => (
                   <li key={i}><a href="#" className="transition-colors hover:text-foreground">{i}</a></li>

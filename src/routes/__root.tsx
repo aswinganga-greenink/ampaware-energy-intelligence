@@ -11,23 +11,56 @@ import {
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
+import { Preloader } from "@/components/site/Preloader";
+import { useEffect } from "react";
+
+import { ZapOff, Home, AlertTriangle, RotateCcw } from "lucide-react";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      {/* Animated Backgrounds */}
+      <div className="absolute inset-0 -z-10 bg-gradient-hero opacity-80" />
+      <div className="absolute inset-0 -z-10 grid-pattern opacity-30" />
+      <div className="absolute top-1/4 -left-32 -z-10 h-96 w-96 rounded-full bg-primary/20 blur-[100px] animate-pulse" />
+      <div className="absolute bottom-1/4 -right-32 -z-10 h-96 w-96 rounded-full bg-destructive/10 blur-[100px] animate-pulse" />
+      
+      <div className="relative z-10 flex flex-col items-center max-w-2xl text-center glass rounded-3xl p-12 shadow-elegant animate-fade-up">
+        {/* Animated Icon */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 blur-2xl bg-destructive/30 rounded-full animate-pulse-ring" />
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-card shadow-card-soft border border-border">
+            <ZapOff className="h-10 w-10 text-destructive animate-float" />
+          </div>
+        </div>
+
+        {/* Text Content */}
+        <h1 className="text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-foreground to-muted-foreground">
+          404
+        </h1>
+        <h2 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+          Grid Disconnected
+        </h2>
+        <p className="mt-4 text-muted-foreground max-w-md mx-auto leading-relaxed">
+          We couldn't find the power source you're looking for. The node might be offline, moved, or completely disconnected from the network.
         </p>
-        <div className="mt-6">
+
+        {/* Actions */}
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:scale-105 hover:bg-primary/90"
           >
-            Go home
+            <span className="absolute inset-0 shimmer opacity-20" />
+            <Home className="h-4 w-4" />
+            Reconnect to Grid
           </Link>
+          <button
+            onClick={() => window.history.back()}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-muted"
+          >
+            Go Back
+          </button>
         </div>
       </div>
     </div>
@@ -39,29 +72,47 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      {/* Animated Backgrounds */}
+      <div className="absolute inset-0 -z-10 bg-gradient-hero opacity-80" />
+      <div className="absolute inset-0 -z-10 grid-pattern opacity-30" />
+      <div className="absolute top-1/4 -left-32 -z-10 h-96 w-96 rounded-full bg-destructive/20 blur-[100px] animate-pulse" />
+      <div className="absolute bottom-1/4 -right-32 -z-10 h-96 w-96 rounded-full bg-accent/20 blur-[100px] animate-pulse" />
+
+      <div className="relative z-10 flex flex-col items-center max-w-2xl text-center glass rounded-3xl p-12 shadow-elegant animate-fade-up">
+        {/* Animated Icon */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 blur-2xl bg-destructive/30 rounded-full animate-pulse-ring" />
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-card shadow-card-soft border border-border">
+            <AlertTriangle className="h-10 w-10 text-destructive animate-float" />
+          </div>
+        </div>
+
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          System Fault Detected
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <p className="mt-4 text-muted-foreground max-w-md mx-auto leading-relaxed">
+          A critical exception occurred in the UI circuit. Our systems have logged the anomaly. You can attempt to reset the connection.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-destructive px-8 py-3 text-sm font-semibold text-destructive-foreground shadow-glow transition-all hover:scale-105 hover:bg-destructive/90"
           >
-            Try again
+            <span className="absolute inset-0 shimmer opacity-20" />
+            <RotateCcw className="h-4 w-4" />
+            Reset Circuit
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-muted"
           >
-            Go home
+            <Home className="h-4 w-4" />
+            Return Home
           </a>
         </div>
       </div>
@@ -123,6 +174,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
+          <Preloader />
           <Outlet />
         </AuthProvider>
       </ThemeProvider>

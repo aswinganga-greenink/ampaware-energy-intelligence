@@ -22,7 +22,7 @@ export function Hero() {
       <div className="mx-auto max-w-7xl px-4 pb-24 pt-20 md:pb-32 md:pt-28">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
           <div className="animate-fade-up text-secondary-foreground">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium text-foreground/80 backdrop-blur">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
@@ -30,13 +30,13 @@ export function Hero() {
               Live across 12,400 ESP32 devices
             </span>
 
-            <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight text-white md:text-6xl lg:text-7xl">
+            <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
               Energy intelligence,
               <br />
               <span className="text-gradient-primary">measured to the watt.</span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
               AmpAware streams voltage, current, power factor and kWh from your
               smart meters in real time — then turns it into KSEB-accurate bills,
               forecasts and savings you can act on.
@@ -47,20 +47,20 @@ export function Hero() {
                 Launch dashboard
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <button className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/10">
+              <button className="inline-flex items-center gap-2 rounded-xl border border-border bg-card/50 px-6 py-3.5 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:bg-white/10">
                 Watch 90s demo
               </button>
             </div>
 
-            <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-white/10 pt-6">
+            <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-border pt-6">
               {[
                 { k: "12.4k", v: "Live devices" },
                 { k: "99.98%", v: "Uptime" },
                 { k: "₹2.3Cr", v: "Saved / yr" },
               ].map((s) => (
                 <div key={s.v}>
-                  <dt className="text-2xl font-semibold text-white">{s.k}</dt>
-                  <dd className="mt-1 text-xs uppercase tracking-wider text-white/50">{s.v}</dd>
+                  <dt className="text-2xl font-semibold text-foreground">{s.k}</dt>
+                  <dd className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">{s.v}</dd>
                 </div>
               ))}
             </dl>
@@ -71,16 +71,16 @@ export function Hero() {
             <div className="absolute -inset-6 -z-10 rounded-3xl bg-primary/20 blur-3xl" />
             <LiveDashboardPreview />
 
-            <div className="absolute -bottom-6 -left-6 hidden items-center gap-3 rounded-2xl glass-dark px-4 py-3 text-white shadow-elegant md:flex">
+            <div className="absolute -bottom-6 -left-6 hidden items-center gap-3 rounded-2xl glass bg-card/80 px-4 py-3 text-foreground shadow-elegant md:flex">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-success/15">
                 <ShieldCheck className="h-4 w-4 text-success" />
               </span>
               <div className="text-xs">
                 <div className="font-semibold">All systems healthy</div>
-                <div className="text-white/60">PF 0.98 · 230.4 V nominal</div>
+                <div className="text-muted-foreground">PF 0.98 · 230.4 V nominal</div>
               </div>
             </div>
-            <div className="absolute -right-4 -top-4 hidden items-center gap-2 rounded-full glass-dark px-3 py-2 text-xs text-white md:flex">
+            <div className="absolute -right-4 -top-4 hidden items-center gap-2 rounded-full glass bg-card/80 px-3 py-2 text-xs text-foreground md:flex">
               <Activity className="h-3.5 w-3.5 text-accent" />
               Streaming · 1.2s latency
             </div>

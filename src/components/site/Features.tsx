@@ -15,7 +15,7 @@ export function Features() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">The platform</span>
-          <h2 className="mt-3 text-4xl font-semibold tracking-tight text-secondary md:text-5xl">One stack for every electron.</h2>
+          <h2 className="mt-3 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">One stack for every electron.</h2>
           <p className="mt-4 text-base text-muted-foreground">From the meter on the wall to the dashboard in your pocket — AmpAware is engineered as a single, coherent energy intelligence layer.</p>
         </div>
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -25,7 +25,7 @@ export function Features() {
               <span className="inline-grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" strokeWidth={1.8} />
               </span>
-              <h3 className="mt-5 text-lg font-semibold text-secondary">{title}</h3>
+              <h3 className="mt-5 text-lg font-semibold text-foreground">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
             </div>
           ))}

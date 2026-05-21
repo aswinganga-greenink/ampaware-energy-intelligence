@@ -42,16 +42,16 @@ export function LiveDashboardPreview() {
   const watts = useMemo(() => Math.round(data[data.length - 1].w), [data]);
 
   return (
-    <div className="rounded-3xl glass-dark p-4 shadow-elegant">
+    <div className="rounded-3xl glass bg-card/80 p-4 shadow-elegant">
       <div className="flex items-center justify-between px-2 pb-3">
-        <div className="flex items-center gap-2 text-xs text-white/70">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="h-2 w-2 animate-pulse rounded-full bg-success" />
           Home / Main feeder
         </div>
-        <div className="flex items-center gap-1 text-[11px] text-white/50">
-          <span className="rounded-md bg-white/5 px-1.5 py-0.5">1H</span>
-          <span className="rounded-md bg-primary/30 px-1.5 py-0.5 text-white">24H</span>
-          <span className="rounded-md bg-white/5 px-1.5 py-0.5">7D</span>
+        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+          <span className="rounded-md bg-card/50 px-1.5 py-0.5">1H</span>
+          <span className="rounded-md bg-primary/30 px-1.5 py-0.5 text-foreground">24H</span>
+          <span className="rounded-md bg-card/50 px-1.5 py-0.5">7D</span>
         </div>
       </div>
 
@@ -59,10 +59,10 @@ export function LiveDashboardPreview() {
       <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-5">
         <div className="flex items-end justify-between">
           <div>
-            <div className="text-xs uppercase tracking-wider text-white/50">Live load</div>
-            <div className="mt-1 flex items-baseline gap-2 text-white">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Live load</div>
+            <div className="mt-1 flex items-baseline gap-2 text-foreground">
               <span className="text-5xl font-semibold tabular-nums tracking-tight">{watts}</span>
-              <span className="text-sm text-white/60">W</span>
+              <span className="text-sm text-muted-foreground">W</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
@@ -113,14 +113,14 @@ export function LiveDashboardPreview() {
           { i: Gauge, l: "PF", v: `${live.pf}`, u: "" },
           { i: Bolt, l: "Today", v: `${live.kwh}`, u: "kWh" },
         ].map(({ i: Icon, l, v, u }) => (
-          <div key={l} className="rounded-xl bg-white/[0.04] p-3">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-white/45">
+          <div key={l} className="rounded-xl bg-card/50 p-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
               <Icon className="h-3 w-3" />
               {l}
             </div>
-            <div className="mt-1 text-sm font-semibold text-white tabular-nums">
+            <div className="mt-1 text-sm font-semibold text-foreground tabular-nums">
               {v}
-              <span className="ml-0.5 text-[10px] font-normal text-white/50">{u}</span>
+              <span className="ml-0.5 text-[10px] font-normal text-muted-foreground">{u}</span>
             </div>
           </div>
         ))}

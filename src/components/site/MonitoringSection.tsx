@@ -19,9 +19,9 @@ export function MonitoringSection() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Smart monitoring</span>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-secondary md:text-5xl">See every watt, before it costs you.</h2>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">See every watt, before it costs you.</h2>
             <p className="mt-5 text-base leading-relaxed text-muted-foreground">Stream live readings from your ESP32 fleet, visualise daily and monthly trends, and surface anomalies the moment they happen — all from one elegant control surface.</p>
-            <ul className="mt-6 space-y-3 text-sm text-secondary">
+            <ul className="mt-6 space-y-3 text-sm text-foreground">
               {["Per-device online / offline indicators","Power factor and harmonic distortion tracking","Anomaly alerts with root-cause hints","Daily summaries delivered to inbox or app"].map((f) => (
                 <li key={f} className="flex items-center gap-3">
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-success/15 text-success">✓</span>
@@ -35,9 +35,9 @@ export function MonitoringSection() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Weekly consumption</div>
-                <div className="mt-1 text-2xl font-semibold text-secondary tabular-nums">104.1 kWh</div>
+                <div className="mt-1 text-2xl font-semibold text-foreground tabular-nums">104.1 kWh</div>
               </div>
-              <div className="rounded-full bg-accent/20 px-2.5 py-1 text-xs font-medium text-secondary">Peak: Sat</div>
+              <div className="rounded-full bg-accent/20 px-2.5 py-1 text-xs font-medium text-foreground">Peak: Sat</div>
             </div>
             <div className="mt-6 h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -64,7 +64,7 @@ export function MonitoringSection() {
               {[{ l: "Avg / day", v: "14.9", u: "kWh" },{ l: "Saved", v: "8.2", u: "kWh" },{ l: "Forecast", v: "₹1,420", u: "" }].map((m) => (
                 <div key={m.l} className="rounded-xl bg-muted/60 p-3">
                   <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.l}</div>
-                  <div className="mt-1 text-base font-semibold text-secondary tabular-nums">{m.v} <span className="text-xs font-normal text-muted-foreground">{m.u}</span></div>
+                  <div className="mt-1 text-base font-semibold text-foreground tabular-nums">{m.v} <span className="text-xs font-normal text-muted-foreground">{m.u}</span></div>
                 </div>
               ))}
             </div>

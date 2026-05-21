@@ -14,7 +14,7 @@ export function SecuritySection() {
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Trust & security</span>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-secondary md:text-5xl">Built for the grid. Hardened for production.</h2>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">Built for the grid. Hardened for production.</h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">AmpAware is engineered with the same security primitives that utilities and industrial IoT operators demand — without the friction.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -23,7 +23,7 @@ export function SecuritySection() {
                 <span className="inline-grid h-10 w-10 place-items-center rounded-xl bg-secondary text-secondary-foreground">
                   <I className="h-4 w-4" />
                 </span>
-                <h3 className="mt-4 text-base font-semibold text-secondary">{t}</h3>
+                <h3 className="mt-4 text-base font-semibold text-foreground">{t}</h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">{b}</p>
               </div>
             ))}

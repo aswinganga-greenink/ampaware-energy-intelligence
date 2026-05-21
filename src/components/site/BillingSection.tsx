@@ -13,38 +13,38 @@ export function BillingSection() {
       <div className="absolute inset-0 -z-10 bg-secondary" />
       <div className="absolute inset-0 -z-10 grid-pattern opacity-30" />
       <div className="absolute -right-32 top-10 -z-10 h-96 w-96 rounded-full bg-primary/30 blur-3xl" />
-      <div className="mx-auto max-w-7xl px-4 text-white">
+      <div className="mx-auto max-w-7xl px-4 text-foreground">
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium text-foreground/80">
               <Receipt className="h-3.5 w-3.5 text-accent" />
               KSEB Billing engine
             </span>
             <h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">Know your bill, <span className="text-accent">before KSEB does.</span></h2>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-white/70">Slab calculations, peak-hour multipliers, fixed charges, duties and taxes — modelled to the rupee. Forecast the next cycle, simulate tariff changes and act on optimisation hints in seconds.</p>
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">Slab calculations, peak-hour multipliers, fixed charges, duties and taxes — modelled to the rupee. Forecast the next cycle, simulate tariff changes and act on optimisation hints in seconds.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {[{ i: TrendingUp, t: "Cycle forecast", v: "₹1,842", s: "± 3.4% accuracy" },{ i: Sparkles, t: "Optimisation", v: "₹312/mo", s: "Recommended savings" }].map(({ i: I, t, v, s }) => (
-                <div key={t} className="glass-dark rounded-2xl p-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-white/55">
+                <div key={t} className="glass bg-card/80 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
                     <I className="h-3.5 w-3.5 text-accent" />
                     {t}
                   </div>
                   <div className="mt-2 text-2xl font-semibold tabular-nums">{v}</div>
-                  <div className="mt-1 text-xs text-white/55">{s}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{s}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-3xl glass-dark p-6 shadow-elegant">
+          <div className="rounded-3xl glass bg-card/80 p-6 shadow-elegant">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase tracking-wider text-white/55">Billing forecast — 2026</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Billing forecast — 2026</div>
                 <div className="mt-1 text-3xl font-semibold tabular-nums">₹14,260</div>
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <span className="flex items-center gap-1.5 text-white/70"><span className="h-2 w-2 rounded-full bg-primary" /> Actual</span>
-                <span className="flex items-center gap-1.5 text-white/70"><span className="h-2 w-2 rounded-full bg-accent" /> Predicted</span>
+                <span className="flex items-center gap-1.5 text-muted-foreground"><span className="h-2 w-2 rounded-full bg-primary" /> Actual</span>
+                <span className="flex items-center gap-1.5 text-muted-foreground"><span className="h-2 w-2 rounded-full bg-accent" /> Predicted</span>
               </div>
             </div>
             <div className="mt-6 h-72">
