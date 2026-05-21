@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Zap } from "lucide-react";
+import { ThemeToggle } from "@/lib/theme";
 
 export function Navbar() {
   return (
@@ -21,12 +22,13 @@ export function Navbar() {
             <li><a href="#security" className="transition-colors hover:text-foreground">Security</a></li>
           </ul>
           <div className="flex items-center gap-2">
-            <button className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:inline-flex">
+            <ThemeToggle className="hidden sm:inline-flex" />
+            <Link to="/login" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:inline-flex">
               Sign in
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-elegant transition-transform hover:-translate-y-0.5">
+            </Link>
+            <Link to="/signup" className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-elegant transition-transform hover:-translate-y-0.5">
               Get started
-            </button>
+            </Link>
           </div>
         </nav>
       </div>
