@@ -1,7 +1,7 @@
 const quotes = [
-  { q: "AmpAware paid for itself in the first quarter. The anomaly alerts caught a failing compressor two weeks before it would have tripped our entire line.", n: "Ananya Menon", r: "Plant Engineer, Cochin Refinery" },
-  { q: "The KSEB billing engine is uncanny. Our monthly forecast has been within ₹40 of the actual bill for six cycles straight.", n: "Rohit Varghese", r: "Facilities Lead, Infopark" },
-  { q: "Finally an energy dashboard that doesn't look like it shipped in 2014.", n: "Lakshmi Iyer", r: "CTO, GreenGrid Labs" },
+  { q: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.", n: "Lorem Ipsum", r: "Dolor Sit Amet, Consectetur" },
+  { q: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.", n: "Sit Amet", r: "Adipiscing Elit, Sed Do" },
+  { q: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa quae ab illo inventore.", n: "Consectetur Adipiscing", r: "Eiusmod Tempor, Incididunt" },
 ];
 
 export function Testimonials() {
