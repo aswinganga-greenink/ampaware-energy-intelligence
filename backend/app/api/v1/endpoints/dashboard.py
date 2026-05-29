@@ -119,6 +119,40 @@ async def get_dashboard_summary(
             for d in user_devices:
                 device_data.append({"name": d.name or "Main Feeder", "value": 0})
         
+    # Projected Bill (Call the billing logic internally to keep it identical)
+    projected_bill = 0.0
+    if device_ids:
+        # We can approximate or just call the billing function logic
+        # For simplicity, let's fetch the monthly aggregate and apply the exact logic.
+        from datetime import datetime
+        year, month = now_ist.year, now_ist.month
+        monthly_agg = await agg_repo.get_monthly_aggregate(device_ids[0], year, month)
+        if monthly_agg:
+            m_kwh = float(monthly_agg.total_active_energy_wh or 0) / 1000
+            if m_kwh <= 250:
+                t_slabs = [
+                    {"limit": 50, "rate": 3.25},
+                    {"limit": 50, "rate": 4.05},
+                    {"limit": 50, "rate": 5.10},
+                    {"limit": 50, "rate": 6.95},
+                    {"limit": 50, "rate": 8.20},
+                ]
+                rem = m_kwh
+                subtotal = 0.0
+                for s in t_slabs:
+                    if rem <= 0: break
+                    u = min(rem, s["limit"])
+                    subtotal += u * s["rate"]
+                    rem -= u
+            else:
+                if m_kwh <= 300: flat_rate = 6.20
+                elif m_kwh <= 350: flat_rate = 7.00
+                elif m_kwh <= 400: flat_rate = 7.35
+                elif m_kwh <= 500: flat_rate = 7.60
+                else: flat_rate = 8.50
+                subtotal = m_kwh * flat_rate
+            projected_bill = subtotal + (subtotal * 0.10) + 65.0
+
     return {
         "metrics": {
             "total_devices": len(device_ids),
@@ -126,7 +160,8 @@ async def get_dashboard_summary(
             "live": live_metrics,
             "week_data": week_data if device_ids else [],
             "day_data": day_data if device_ids else [],
-            "device_data": device_data if device_ids else []
+            "device_data": device_data if device_ids else [],
+            "projected_bill": round(projected_bill)
         }
     }
 

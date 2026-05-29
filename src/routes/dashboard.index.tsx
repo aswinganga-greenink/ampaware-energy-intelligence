@@ -27,6 +27,8 @@ function Overview() {
   const [day, setDay] = useState<any[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
 
+  const [projectedBill, setProjectedBill] = useState(0);
+
   useEffect(() => {
     let id: any;
     const fetchMetrics = async () => {
@@ -49,6 +51,7 @@ function Overview() {
           if (m.week_data) setWeek(m.week_data);
           if (m.day_data) setDay(m.day_data);
           if (m.device_data) setDevices(m.device_data);
+          if (m.projected_bill !== undefined) setProjectedBill(m.projected_bill);
         }
       } catch (e) {
         console.error("Failed to fetch dashboard metrics", e);
@@ -60,8 +63,6 @@ function Overview() {
 
     return () => clearInterval(id);
   }, []);
-
-  const projectedBill = useMemo(() => Math.round(live.kwh * 32.4 + 220), [live.kwh]);
 
   // Dynamic metric calculations
   const avgW = day.length ? day.reduce((acc, d) => acc + d.load, 0) / day.length : 0;
