@@ -25,10 +25,9 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from app.core.config import get_settings
 from app.db.base import Base
 
-# IMPORTANT: Import all models here so Alembic autogenerate detects them.
-# Each phase will add more model imports below.
-# from app.domain.models.user import User
-# from app.domain.models.device import Device
+# IMPORTANT: Import the model registry so Alembic autogenerate detects ALL tables.
+# app.domain.models.__init__ imports every ORM model class.
+import app.domain.models  # noqa: F401  # registers all models with Base.metadata
 
 # Alembic Config object
 config = context.config
