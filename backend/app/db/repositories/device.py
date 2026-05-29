@@ -51,6 +51,15 @@ class DeviceRepository(BaseRepository[Device]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_devices_by_owner(self, owner_id: uuid.UUID) -> list[Device]:
+        """Fetch all devices owned by a specific user."""
+        stmt = select(Device).where(
+            Device.owner_id == owner_id,
+            Device.is_deleted == False,  # noqa: E712
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
 
 class DeviceConfigurationRepository(BaseRepository[DeviceConfiguration]):
     """Repository for managing Device Configurations."""
@@ -79,7 +88,7 @@ class DeviceAuthTokenRepository(BaseRepository[DeviceAuthToken]):
         stmt = select(DeviceAuthToken).where(
             DeviceAuthToken.device_id == device_id,
             DeviceAuthToken.token_hash == token_hash,
-            DeviceAuthToken.is_revoked == False,  # noqa: E712
+            DeviceAuthToken.is_active == True,  # noqa: E712
         )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()

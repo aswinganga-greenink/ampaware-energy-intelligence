@@ -46,8 +46,8 @@ class UserApiKeyRepository(BaseRepository[UserApiKey]):
             .options(selectinload(UserApiKey.user))
             .where(
                 UserApiKey.key_hash == key_hash,
-                UserApiKey.is_revoked == False,  # noqa: E712
-                UserApiKey.expires_at > now,
+                UserApiKey.is_active == True,  # noqa: E712
+                (UserApiKey.expires_at.is_(None)) | (UserApiKey.expires_at > now),
             )
         )
         result = await self._session.execute(stmt)
