@@ -10,13 +10,16 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health
+from app.api.v1.endpoints import auth, dashboard, health, telemetry
 
 api_v1_router = APIRouter()
 
 # --- Core system ---
 api_v1_router.include_router(health.router)
+api_v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_v1_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 
-# Future phases will add:
-# from app.api.v1.endpoints import devices, telemetry, billing, analytics, ...
-# api_v1_router.include_router(devices.router, prefix="/devices", tags=["devices"])
+# --- Devices & Ingestion ---
+api_v1_router.include_router(
+    telemetry.router, prefix="/telemetry", tags=["telemetry"]
+)
