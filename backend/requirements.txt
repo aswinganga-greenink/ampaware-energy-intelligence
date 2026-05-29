@@ -1,0 +1,48 @@
+# =============================================================================
+# Production dependencies — pinned to major.minor for reproducible builds.
+# Run: pip install -r requirements.txt
+# =============================================================================
+
+# --- Web framework ---
+fastapi==0.115.5
+uvicorn[standard]==0.32.1          # includes uvloop + httptools for performance
+
+# --- ASGI utilities ---
+python-multipart==0.0.12           # multipart form support
+httpx==0.28.0                      # async HTTP client (also used by TestClient)
+
+# --- Configuration ---
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# --- Database ---
+sqlalchemy==2.0.36                 # async core
+asyncpg==0.30.0                    # async PostgreSQL driver
+psycopg2-binary==2.9.10            # sync driver for Alembic migrations
+alembic==1.14.0
+
+# --- Redis ---
+redis==5.2.0                       # includes redis.asyncio
+
+# --- Logging ---
+structlog==24.4.0
+
+# --- Scheduling ---
+apscheduler==3.10.4
+
+# --- Security (added in Phase 12 but declared now) ---
+python-jose[cryptography]==3.3.0   # JWT
+passlib[bcrypt]==1.7.4             # password hashing
+
+# --- Utilities ---
+pytz==2024.2                       # fallback tz; prefer zoneinfo in code
+python-dateutil==2.9.0
+
+# --- OpenTelemetry (opt-in) ---
+opentelemetry-api==1.29.0
+opentelemetry-sdk==1.29.0
+opentelemetry-instrumentation-fastapi==0.50b0
+opentelemetry-exporter-otlp-proto-grpc==1.29.0
+
+# --- Decimal precision ---
+# Python's decimal module is stdlib; no extra package needed.

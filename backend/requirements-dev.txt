@@ -1,0 +1,30 @@
+# =============================================================================
+# Development & testing dependencies (not included in production image).
+# =============================================================================
+-r requirements.txt
+
+# --- Testing ---
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+anyio==4.7.0                       # async test runner backend
+
+# --- HTTP mocking ---
+respx==0.21.1                      # mock httpx clients
+
+# --- DB testing ---
+aiosqlite==0.20.0                  # in-memory SQLite for fast unit tests
+
+# --- Code quality ---
+ruff==0.8.3                        # linter + formatter
+mypy==1.13.0                       # static type checker
+sqlalchemy[mypy]==2.0.36
+
+# --- Security scanning ---
+bandit==1.8.0
+safety==3.2.11
+
+# --- Dev utilities ---
+ipython==8.30.0
+rich==13.9.4                       # pretty printing in scripts

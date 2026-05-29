@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+logs/*.log
+logs/*.log.*
+
+# Alembic
+# (versions are committed, but not the __pycache__)
+alembic/versions/__pycache__/
+
+# Docker
+*.env.local
+
+# OS
+.DS_Store
+Thumbs.db
