@@ -100,13 +100,24 @@ async def get_dashboard_summary(
                 "load": round(avg_w)
             })
             
-        # Device Breakdown (Mocked realistically based on total for now, since we only have 1 device)
-        device_data = [
-            {"name": "HVAC", "value": 38 if today_kwh > 0 else 0},
-            {"name": "Lighting", "value": 22 if today_kwh > 0 else 0},
-            {"name": "Appliances", "value": 24 if today_kwh > 0 else 0},
-            {"name": "Other", "value": 16 if today_kwh > 0 else 0},
-        ]
+        # Device Breakdown (Live from actual devices)
+        device_data = []
+        if today_kwh > 0:
+            for d in user_devices:
+                d_agg = await agg_repo.get_daily_aggregate(d.id, now_ist.date())
+                d_kwh = (float(d_agg.total_active_energy_wh) / 1000) if d_agg else 0.0
+                if d_kwh > 0:
+                    pct = round((d_kwh / today_kwh) * 100)
+                    device_data.append({"name": d.name or "Main Feeder", "value": pct})
+            
+            # Ensure percentages sum to 100 exactly if there are any devices
+            if device_data:
+                total_pct = sum(item["value"] for item in device_data)
+                if total_pct > 0 and total_pct != 100:
+                    device_data[0]["value"] += (100 - total_pct)
+        else:
+            for d in user_devices:
+                device_data.append({"name": d.name or "Main Feeder", "value": 0})
         
     return {
         "metrics": {
