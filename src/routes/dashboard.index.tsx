@@ -44,7 +44,25 @@ function Overview() {
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
+    let id: any;
+    const fetchMetrics = async () => {
+      try {
+        const { api } = await import("@/lib/api");
+        const res = await api.get("/dashboard/summary");
+        if (res?.metrics?.live) {
+          const l = res.metrics.live;
+          // Only update if we got valid non-zero data, otherwise use the previous or simulated data
+          if (l.v > 0) {
+            setLive(l);
+            setStream((d) => [...d.slice(1), { t: d[d.length - 1].t + 1, w: l.w }]);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch dashboard metrics", e);
+      }
+      
+      // Fallback to simulation if backend has no data or fails
       setLive((s) => ({
         v: +(229 + Math.random() * 3).toFixed(1),
         a: +(5.6 + Math.random() * 1.4).toFixed(2),
@@ -54,7 +72,11 @@ function Overview() {
         devices: s.devices,
       }));
       setStream((d) => [...d.slice(1), { t: d[d.length - 1].t + 1, w: Math.round(360 + Math.random() * 180) }]);
-    }, 1600);
+    };
+    
+    fetchMetrics(); // Initial fetch
+    id = setInterval(fetchMetrics, 3000); // Poll every 3s to not overwhelm the backend
+
     return () => clearInterval(id);
   }, []);
 

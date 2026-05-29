@@ -1,25 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { Receipt, Download, TrendingUp } from "lucide-react";
+import { Receipt, Download, TrendingUp, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard/billing")({
   component: BillingPage,
 });
-
-const CYCLE = Array.from({ length: 30 }, (_, i) => ({
-  d: i + 1,
-  actual: Math.round(60 + i * 6.2 + Math.sin(i / 3) * 14),
-  forecast: Math.round(60 + i * 6.0 + Math.cos(i / 4) * 10),
-}));
-
-const SLABS = [
-  { range: "0–50", rate: "₹3.15", units: 50, amount: 157.5 },
-  { range: "51–100", rate: "₹3.70", units: 50, amount: 185 },
-  { range: "101–150", rate: "₹4.80", units: 50, amount: 240 },
-  { range: "151–200", rate: "₹6.40", units: 42, amount: 268.8 },
-];
 
 const TOOLTIP_STYLE = {
   background: "var(--color-popover)", border: "1px solid var(--color-border)",
@@ -27,9 +16,32 @@ const TOOLTIP_STYLE = {
 };
 
 function BillingPage() {
-  const subtotal = SLABS.reduce((s, r) => s + r.amount, 0);
-  const duty = subtotal * 0.1;
-  const total = Math.round(subtotal + duty + 65);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const result = await api.get("/dashboard/billing");
+        setData(result);
+      } catch (e) {
+        console.error("Failed to load billing data", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading || !data) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const { consumed_kwh, cycle_days, avg_per_day, slabs, subtotal, duty, fixed_charge, total, chart_data } = data;
 
   return (
     <div className="space-y-6">
@@ -53,9 +65,9 @@ function BillingPage() {
             <TrendingUp className="h-3 w-3" /> 6.4% vs last cycle
           </div>
           <dl className="mt-6 space-y-1.5 text-sm">
-            <div className="flex justify-between"><dt className="opacity-80">Units consumed</dt><dd>192 kWh</dd></div>
-            <div className="flex justify-between"><dt className="opacity-80">Cycle days</dt><dd>30</dd></div>
-            <div className="flex justify-between"><dt className="opacity-80">Avg / day</dt><dd>6.4 kWh</dd></div>
+            <div className="flex justify-between"><dt className="opacity-80">Units consumed</dt><dd>{consumed_kwh} kWh</dd></div>
+            <div className="flex justify-between"><dt className="opacity-80">Cycle days</dt><dd>{cycle_days}</dd></div>
+            <div className="flex justify-between"><dt className="opacity-80">Avg / day</dt><dd>{avg_per_day} kWh</dd></div>
           </dl>
         </div>
 
@@ -64,7 +76,7 @@ function BillingPage() {
           <p className="text-xs text-muted-foreground">Daily cumulative consumption vs the AI forecast.</p>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={CYCLE} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <LineChart data={chart_data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="d" stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
@@ -92,7 +104,7 @@ function BillingPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {SLABS.map((s) => (
+            {slabs.map((s: any) => (
               <tr key={s.range} className="text-foreground">
                 <td className="px-5 py-3 font-medium">{s.range}</td>
                 <td className="px-5 py-3 text-muted-foreground">{s.rate}</td>
@@ -110,7 +122,7 @@ function BillingPage() {
             </tr>
             <tr className="text-muted-foreground">
               <td className="px-5 py-3" colSpan={3}>Fixed + meter rent</td>
-              <td className="px-5 py-3 text-right tabular-nums">₹65.00</td>
+              <td className="px-5 py-3 text-right tabular-nums">₹{fixed_charge.toFixed(2)}</td>
             </tr>
             <tr className="bg-primary/5 text-base font-semibold text-foreground">
               <td className="px-5 py-4" colSpan={3}>Total projected</td>

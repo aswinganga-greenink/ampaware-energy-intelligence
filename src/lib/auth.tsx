@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { api } from "./api";
 
-type User = { name: string; email: string };
+type User = { id: string; name: string; email: string; full_name: string; role: string };
 type AuthCtx = {
   user: User | null;
   ready: boolean;
@@ -10,42 +11,56 @@ type AuthCtx = {
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
-const KEY = "ampaware.auth.user";
+const TOKEN_KEY = "ampaware.auth.token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
+  const fetchUser = async () => {
     try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setUser(JSON.parse(raw));
-    } catch {}
-    setReady(true);
-  }, []);
-
-  const persist = (u: User | null) => {
-    setUser(u);
-    if (typeof window !== "undefined") {
-      if (u) localStorage.setItem(KEY, JSON.stringify(u));
-      else localStorage.removeItem(KEY);
+      const data = await api.get("/auth/me");
+      setUser(data);
+    } catch (e) {
+      setUser(null);
+      localStorage.removeItem(TOKEN_KEY);
     }
   };
+
+  useEffect(() => {
+    const init = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) {
+        await fetchUser();
+      }
+      setReady(true);
+    };
+    init();
+  }, []);
 
   return (
     <Ctx.Provider
       value={{
         user,
         ready,
-        login: async (email) => {
-          await new Promise((r) => setTimeout(r, 400));
-          persist({ name: email.split("@")[0] || "Operator", email });
+        login: async (email, password) => {
+          const formData = new URLSearchParams();
+          formData.append("username", email);
+          formData.append("password", password);
+          
+          const data = await api.post("/auth/login", formData, true);
+          localStorage.setItem(TOKEN_KEY, data.access_token);
+          await fetchUser();
         },
-        signup: async (name, email) => {
+        signup: async (name, email, password) => {
+          // Fallback mock since signup endpoint isn't implemented on backend yet
           await new Promise((r) => setTimeout(r, 500));
-          persist({ name, email });
+          console.warn("Signup is mocked. Use seed data to login.");
         },
-        logout: () => persist(null),
+        logout: () => {
+          localStorage.removeItem(TOKEN_KEY);
+          setUser(null);
+        },
       }}
     >
       {children}

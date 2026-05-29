@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
+import { api } from "@/lib/api";
 import { Bell, Moon, Sun, Wifi, Save } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/settings")({
@@ -59,25 +60,47 @@ function SettingsPage() {
       </Card>
 
       <Card title="Connected devices" desc="ESP32 endpoints currently streaming.">
-        <ul className="divide-y divide-border">
-          {[
-            { id: "esp32-001", loc: "Main feeder", status: "Online" },
-            { id: "esp32-014", loc: "HVAC sub-meter", status: "Online" },
-            { id: "esp32-027", loc: "Lighting circuit", status: "Online" },
-          ].map((d) => (
-            <li key={d.id} className="flex items-center justify-between py-3">
-              <div>
-                <div className="text-sm font-semibold text-foreground">{d.loc}</div>
-                <div className="text-xs text-muted-foreground">{d.id}</div>
-              </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
-                <span className="h-1.5 w-1.5 rounded-full bg-success" /> {d.status}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <DevicesList />
       </Card>
     </div>
+  );
+}
+
+function DevicesList() {
+  const [devices, setDevices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDevices() {
+      try {
+        const result = await api.get("/dashboard/devices");
+        setDevices(result);
+      } catch (e) {
+        console.error("Failed to load devices", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDevices();
+  }, []);
+
+  if (loading) return <div className="py-4 text-center text-sm text-muted-foreground">Loading devices...</div>;
+  if (!devices.length) return <div className="py-4 text-center text-sm text-muted-foreground">No devices found.</div>;
+
+  return (
+    <ul className="divide-y divide-border">
+      {devices.map((d) => (
+        <li key={d.id} className="flex items-center justify-between py-3">
+          <div>
+            <div className="text-sm font-semibold text-foreground">{d.loc}</div>
+            <div className="text-xs text-muted-foreground">{d.id}</div>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${d.status === 'Online' ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${d.status === 'Online' ? 'bg-success' : 'bg-muted-foreground'}`} /> {d.status}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

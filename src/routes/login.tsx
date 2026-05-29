@@ -29,8 +29,8 @@ function LoginPage() {
     try {
       await login(email, password);
       navigate({ to: "/dashboard" });
-    } catch (err) {
-      setError("Could not sign in. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Could not sign in. Please check your credentials.");
     } finally {
       setLoading(false);
     }
