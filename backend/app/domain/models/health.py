@@ -266,8 +266,8 @@ class AnomalyRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Text, nullable=True, comment="Notes entered when resolving the anomaly"
     )
 
-    # --- Metadata ---
-    metadata: Mapped[dict | None] = mapped_column(
+    # --- Extra context ---
+    extra_data: Mapped[dict | None] = mapped_column(
         JSONB,
         nullable=True,
         comment="Additional context (e.g., all 3 phase values at detection time)",
