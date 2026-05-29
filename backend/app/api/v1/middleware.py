@@ -99,3 +99,55 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         for header, value in self._HEADERS.items():
             response.headers[header] = value
         return response
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """
+    Fixed-window rate limiting middleware backed by Redis.
+    Uses X-Forwarded-For to identify client IP.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        from app.core.config import get_settings
+        
+        settings = get_settings()
+        if not settings.rate_limit.enabled:
+            return await call_next(request)
+
+        client_ip = request.headers.get(
+            "X-Forwarded-For", request.client.host if request.client else "unknown"
+        )
+        
+        # Check if this is a high-volume route
+        is_telemetry = request.url.path.startswith(f"{settings.api_v1_prefix}/telemetry")
+        limit = (
+            settings.rate_limit.telemetry_per_minute
+            if is_telemetry
+            else settings.rate_limit.default_per_minute
+        )
+
+        current_minute = int(time.time() // 60)
+        
+        from app.infrastructure.redis.client import get_redis_client, redis_key
+        key = redis_key("ratelimit", client_ip, str(current_minute))
+        
+        try:
+            redis = get_redis_client()
+            count = await redis.incr(key)
+            if count == 1:
+                await redis.expire(key, 60)
+                
+            if count > limit:
+                from fastapi.responses import JSONResponse
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "error_code": "RATE_LIMIT_EXCEEDED",
+                        "message": "Too many requests. Please try again later.",
+                    },
+                )
+        except Exception as exc:
+            # Fail open if Redis is unavailable
+            logger.warning("ratelimit.redis.failed", error=str(exc))
+
+        return await call_next(request)

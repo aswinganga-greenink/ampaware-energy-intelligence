@@ -81,7 +81,7 @@ class RedisSettings(BaseSettings):
     @property
     def url(self) -> str:
         """Redis URL with optional auth."""
-        auth = f":{self.password}@" if self.password else ""
+        auth = f":{self.password}@" if self.password and self.password.strip() else ""
         return f"redis://{auth}{self.host}:{self.port}/{self.db}"
 
 

@@ -80,6 +80,13 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_validation(
         request: Request, exc: AppValidationError
     ) -> JSONResponse:
+        from app.core.exceptions import DuplicatePacketError
+        
+        if isinstance(exc, DuplicatePacketError):
+            return _error_response(
+                exc.error_code, exc.message, status.HTTP_409_CONFLICT
+            )
+            
         return _error_response(
             exc.error_code, exc.message, status.HTTP_422_UNPROCESSABLE_ENTITY
         )

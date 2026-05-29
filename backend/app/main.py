@@ -31,6 +31,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.error_handlers import register_exception_handlers
 from app.api.v1.middleware import (
     CorrelationIDMiddleware,
+    RateLimitMiddleware,
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
@@ -111,6 +112,7 @@ def create_application() -> FastAPI:
     # --- Custom middleware (applied in reverse registration order) ---
     # Last registered = outermost (first to run on request)
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(CorrelationIDMiddleware)
 

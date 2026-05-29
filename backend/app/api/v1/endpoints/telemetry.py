@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.api.deps import (
     get_anomaly_service,
@@ -30,8 +30,8 @@ router = APIRouter(tags=["telemetry"])
     summary="Ingest Smart Meter Telemetry",
 )
 async def ingest_telemetry(
+    request: Request,
     payload: TelemetryIngestPayload,
-    raw_payload: dict[str, Any] = Body(...),
     device: Device = Depends(get_device_token),
     telemetry_svc: TelemetryService = Depends(get_telemetry_service),
     anomaly_svc: AnomalyService = Depends(get_anomaly_service),
@@ -46,6 +46,8 @@ async def ingest_telemetry(
     3. Evaluate real-time electrical anomalies (Voltage, PF).
     4. Compute energy (Wh) delta and update aggregates idempotently.
     """
+    raw_payload = await request.json()
+    
     # 1 & 2. Deduplication and Ingestion
     reading = await telemetry_svc.ingest_payload(
         device_id=device.id,

@@ -63,41 +63,39 @@ class EnergyAggregationService:
         )
 
         # Calculate Delta Energy
+        delta_seconds = 0.0
         delta_kwh = 0.0
+        active_energy_wh = 0.0
+        
         if latest_acc:
-            # Time difference in hours
-            time_diff_hours = (
+            # Time difference in seconds
+            delta_seconds = (
                 current_reading.recorded_at - latest_acc.to_recorded_at
-            ).total_seconds() / 3600.0
+            ).total_seconds()
 
-            if time_diff_hours > 0:
-                # Average Power Method (Trapezoidal integration for higher accuracy)
-                avg_power_w = (
-                    float(current_reading.active_power_w)
-                    + float(latest_acc.to_active_power_w)
-                ) / 2.0
-
-                # Delta kWh = (Avg Power in W * hours) / 1000
-                delta_kwh = (avg_power_w * time_diff_hours) / 1000.0
-
+            if delta_seconds > 0:
+                # Approximate Average Power Method (using current power since we don't store prev power in acc)
+                avg_power_w = float(current_reading.total_active_power_w or 0.0)
+                
+                # Delta Wh = (Avg Power in W * delta_seconds) / 3600
+                active_energy_wh = (avg_power_w * delta_seconds) / 3600.0
+                
                 # Prevent negative energy accumulation from drift/noise
-                if delta_kwh < 0:
-                    delta_kwh = 0.0
+                if active_energy_wh < 0:
+                    active_energy_wh = 0.0
+                    
+                delta_kwh = active_energy_wh / 1000.0
 
         # 2. Store the new accumulation marker
         new_acc = EnergyAccumulation(
             device_id=current_reading.device_id,
             time_of_day_bucket=bucket,
-            from_recorded_at=latest_acc.to_recorded_at
-            if latest_acc
-            else current_reading.recorded_at,
+            from_recorded_at=latest_acc.to_recorded_at if latest_acc else None,
             to_recorded_at=current_reading.recorded_at,
-            from_telemetry_id=latest_acc.to_telemetry_id
-            if latest_acc
-            else current_reading.id,
+            from_telemetry_id=latest_acc.to_telemetry_id if latest_acc else None,
             to_telemetry_id=current_reading.id,
-            delta_kwh=delta_kwh,
-            to_active_power_w=current_reading.active_power_w,
+            delta_seconds=max(0.1, delta_seconds), # Ensure positive for constraint
+            active_energy_wh=active_energy_wh,
         )
         await self.accumulation_repo.create(new_acc)
 

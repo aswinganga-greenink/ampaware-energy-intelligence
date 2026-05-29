@@ -35,53 +35,54 @@ class AnomalyService:
         POWER_FACTOR_LOW = 0.6
 
         # Check Overvoltage
-        if reading.voltage_v > VOLTAGE_HIGH:
+        # Check Overvoltage
+        if reading.phase_a_voltage and reading.phase_a_voltage > VOLTAGE_HIGH:
             await self._trigger_anomaly(
                 device_id=reading.device_id,
-                anomaly_type=AnomalyType.OVER_VOLTAGE,
+                anomaly_type=AnomalyType.VOLTAGE_HIGH,
                 severity=AnomalySeverity.HIGH,
-                description=f"Voltage breached upper threshold: {reading.voltage_v}V",
-                extra_data={"voltage_v": float(reading.voltage_v), "threshold": VOLTAGE_HIGH},
+                description=f"Voltage breached upper threshold: {reading.phase_a_voltage}V",
+                extra_data={"voltage_v": float(reading.phase_a_voltage), "threshold": VOLTAGE_HIGH},
             )
         else:
             await self._resolve_anomaly_if_open(
                 device_id=reading.device_id,
-                anomaly_type=AnomalyType.OVER_VOLTAGE,
+                anomaly_type=AnomalyType.VOLTAGE_HIGH,
                 resolve_reason="Voltage returned to normal operational limits.",
             )
 
         # Check Undervoltage
-        if reading.voltage_v < VOLTAGE_LOW:
+        if reading.phase_a_voltage and reading.phase_a_voltage < VOLTAGE_LOW:
             await self._trigger_anomaly(
                 device_id=reading.device_id,
-                anomaly_type=AnomalyType.UNDER_VOLTAGE,
+                anomaly_type=AnomalyType.VOLTAGE_LOW,
                 severity=AnomalySeverity.MEDIUM,
-                description=f"Voltage breached lower threshold: {reading.voltage_v}V",
-                extra_data={"voltage_v": float(reading.voltage_v), "threshold": VOLTAGE_LOW},
+                description=f"Voltage breached lower threshold: {reading.phase_a_voltage}V",
+                extra_data={"voltage_v": float(reading.phase_a_voltage), "threshold": VOLTAGE_LOW},
             )
         else:
             await self._resolve_anomaly_if_open(
                 device_id=reading.device_id,
-                anomaly_type=AnomalyType.UNDER_VOLTAGE,
+                anomaly_type=AnomalyType.VOLTAGE_LOW,
                 resolve_reason="Voltage returned to normal operational limits.",
             )
 
         # Check Power Factor
-        if reading.power_factor < POWER_FACTOR_LOW:
+        if reading.total_power_factor and reading.total_power_factor < POWER_FACTOR_LOW:
             await self._trigger_anomaly(
                 device_id=reading.device_id,
-                anomaly_type=AnomalyType.LOW_POWER_FACTOR,
+                anomaly_type=AnomalyType.POWER_FACTOR_LOW,
                 severity=AnomalySeverity.MEDIUM,
-                description=f"Power factor critically low: {reading.power_factor}",
+                description=f"Power factor critically low: {reading.total_power_factor}",
                 extra_data={
-                    "power_factor": float(reading.power_factor),
+                    "power_factor": float(reading.total_power_factor),
                     "threshold": POWER_FACTOR_LOW,
                 },
             )
         else:
             await self._resolve_anomaly_if_open(
                 device_id=reading.device_id,
-                anomaly_type=AnomalyType.LOW_POWER_FACTOR,
+                anomaly_type=AnomalyType.POWER_FACTOR_LOW,
                 resolve_reason="Power factor normalized.",
             )
 

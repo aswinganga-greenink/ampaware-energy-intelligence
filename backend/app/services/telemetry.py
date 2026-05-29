@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import DuplicatePacketError
 from app.db.repositories.device import DeviceRepository
 from app.db.repositories.telemetry import TelemetryRepository
+from app.domain.enums.connection_type import ConnectionType
 from app.domain.models.telemetry import TelemetryReading
 from app.domain.schemas.telemetry import TelemetryIngestPayload
 from app.infrastructure.redis.client import get_redis_client, redis_key
@@ -80,20 +81,28 @@ class TelemetryService:
             )
 
         # 3. Persistence
+        # Map single-phase payload to phase A fields and totals
         reading = TelemetryReading(
             device_id=device_id,
             sequence_number=payload.sequence_number,
             recorded_at=payload.recorded_at,
             received_at=datetime.now(timezone.utc),
-            voltage_v=payload.voltage_v,
-            current_a=payload.current_a,
-            active_power_w=payload.active_power_w,
-            reactive_power_var=payload.reactive_power_var,
-            apparent_power_va=payload.apparent_power_va,
-            power_factor=payload.power_factor,
-            frequency_hz=payload.frequency_hz,
+            connection_type=ConnectionType.SINGLE_PHASE, # Default for simple payload mapping
+            
+            phase_a_voltage=payload.voltage_v,
+            phase_a_current=payload.current_a,
+            phase_a_active_power_w=payload.active_power_w,
+            phase_a_reactive_power_var=payload.reactive_power_var,
+            phase_a_apparent_power_va=payload.apparent_power_va,
+            phase_a_power_factor=payload.power_factor,
+            
+            total_active_power_w=payload.active_power_w,
+            total_apparent_power_va=payload.apparent_power_va,
+            total_reactive_power_var=payload.reactive_power_var,
+            total_power_factor=payload.power_factor,
+            
             is_valid=is_valid,
-            validation_errors=validation_errors if not is_valid else None,
+            validation_flags={"errors": validation_errors} if not is_valid else None,
             raw_payload=raw_payload_json,
         )
 
