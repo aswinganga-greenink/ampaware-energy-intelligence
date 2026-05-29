@@ -15,7 +15,7 @@ from app.db.repositories.device import DeviceRepository
 from app.db.repositories.telemetry import TelemetryRepository
 from app.domain.models.telemetry import TelemetryReading
 from app.domain.schemas.telemetry import TelemetryIngestPayload
-from app.infrastructure.redis.client import redis_client, redis_key
+from app.infrastructure.redis.client import get_redis_client, redis_key
 
 
 class TelemetryService:
@@ -45,8 +45,9 @@ class TelemetryService:
         dedup_key = redis_key(
             "telemetry", "dedup", str(device_id), str(payload.sequence_number)
         )
+        client = get_redis_client()
         # setnx returns True if the key was set (i.e. it did not exist).
-        is_new = await redis_client.setnx(dedup_key, "1")
+        is_new = await client.setnx(dedup_key, "1")
         if not is_new:
             raise DuplicatePacketError(
                 "Duplicate telemetry sequence detected.",
@@ -55,7 +56,7 @@ class TelemetryService:
             )
 
         # Retain deduplication memory for 24 hours (prevents redis memory leak)
-        await redis_client.expire(dedup_key, 86400)
+        await client.expire(dedup_key, 86400)
 
         # 2. Electrical bounds validation (strict constraints)
         is_valid = True
