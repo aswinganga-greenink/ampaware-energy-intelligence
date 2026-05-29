@@ -63,13 +63,23 @@ function Overview() {
 
   const projectedBill = useMemo(() => Math.round(live.kwh * 32.4 + 220), [live.kwh]);
 
+  // Dynamic metric calculations
+  const avgW = day.length ? day.reduce((acc, d) => acc + d.load, 0) / day.length : 0;
+  const wDiff = avgW > 0 ? ((live.w - avgW) / avgW) * 100 : 0;
+  
+  const yestKwh = week.length > 1 ? week[week.length - 2].kwh : 0;
+  const kwhDiff = yestKwh > 0 ? ((live.kwh - yestKwh) / yestKwh) * 100 : 0;
+
+  const pfStatus = live.pf >= 0.95 ? { t: "Excellent", c: "text-success" } : live.pf >= 0.85 ? { t: "Good", c: "text-accent-foreground" } : { t: "Poor", c: "text-destructive" };
+  const vStatus = live.v >= 220 && live.v <= 240 ? { t: "Nominal", c: "text-muted-foreground" } : { t: "Fluctuating", c: "text-accent-foreground" };
+
   const metrics = [
-    { i: Zap, l: "Live power", v: `${live.w}`, u: "W", t: "▼ 12% vs avg", c: "text-success" },
-    { i: Bolt, l: "Voltage", v: `${live.v}`, u: "V", t: "Nominal", c: "text-muted-foreground" },
-    { i: Plug, l: "Current", v: `${live.a}`, u: "A", t: "Stable", c: "text-muted-foreground" },
-    { i: Gauge, l: "Power factor", v: `${live.pf}`, u: "", t: "Excellent", c: "text-success" },
-    { i: Activity, l: "Today", v: `${live.kwh.toFixed(1)}`, u: "kWh", t: "▲ 4.2%", c: "text-accent-foreground" },
-    { i: Cpu, l: "Active devices", v: `${live.devices}`, u: "", t: "All online", c: "text-success" },
+    { i: Zap, l: "Live power", v: `${live.w}`, u: "W", t: `${wDiff > 0 ? "▲" : "▼"} ${Math.abs(wDiff).toFixed(1)}% vs avg`, c: wDiff > 0 ? "text-accent-foreground" : "text-success" },
+    { i: Bolt, l: "Voltage", v: `${live.v}`, u: "V", t: vStatus.t, c: vStatus.c },
+    { i: Plug, l: "Current", v: `${live.a}`, u: "A", t: live.a > 0 ? "Stable" : "Idle", c: "text-muted-foreground" },
+    { i: Gauge, l: "Power factor", v: `${live.pf}`, u: "", t: pfStatus.t, c: pfStatus.c },
+    { i: Activity, l: "Today", v: `${live.kwh.toFixed(1)}`, u: "kWh", t: `${kwhDiff > 0 ? "▲" : "▼"} ${Math.abs(kwhDiff).toFixed(1)}% vs yest`, c: kwhDiff > 0 ? "text-accent-foreground" : "text-success" },
+    { i: Cpu, l: "Active devices", v: `${live.devices}`, u: "", t: live.devices > 0 ? "Online" : "Offline", c: live.devices > 0 ? "text-success" : "text-destructive" },
   ];
 
   return (
@@ -139,7 +149,10 @@ function Overview() {
           </div>
           <div className="text-right">
             <div className="text-2xl font-semibold tabular-nums text-foreground">{live.w} W</div>
-            <div className="inline-flex items-center gap-1 text-xs text-success"><TrendingDown className="h-3 w-3" /> 12% vs avg</div>
+            <div className={`inline-flex items-center gap-1 text-xs ${wDiff > 0 ? "text-accent-foreground" : "text-success"}`}>
+              {wDiff > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />} 
+              {Math.abs(wDiff).toFixed(1)}% vs avg
+            </div>
           </div>
         </div>
         <div className="mt-4 h-64">
