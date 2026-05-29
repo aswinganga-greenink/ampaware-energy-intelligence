@@ -190,36 +190,62 @@ async def get_dashboard_billing(
                     "forecast": round(forecast, 1)
                 })
 
-    # Standard KSEB LT-1A slabs (Deterministic calculation applied to REAL consumed data)
-    fallback_slabs = [
-        {"range": "0–50", "rate": 3.15, "limit": 50},
-        {"range": "51–100", "rate": 3.70, "limit": 50},
-        {"range": "101–150", "rate": 4.80, "limit": 50},
-        {"range": "151–200", "rate": 6.40, "limit": 50},
-        {"range": "201–250", "rate": 7.60, "limit": 50},
-        {"range": "250+", "rate": 8.80, "limit": 9999},
-    ]
+    # KSEB LT-1A Tariff Logic (Monthly)
+    # If <= 250 units, use Telescopic slabs. If > 250 units, use Non-Telescopic (flat rate for all units).
     
-    remaining_kwh = total_kwh
+    slabs_breakdown = []
+    subtotal = 0.0
     
-    for slab in fallback_slabs:
-        if remaining_kwh <= 0:
-            break
-            
-        units_in_slab = min(remaining_kwh, slab["limit"])
-        amount = units_in_slab * slab["rate"]
+    # KSEB typically bills bi-monthly, but for this monthly dashboard we use the monthly equivalent slabs.
+    if total_kwh <= 250:
+        # Telescopic Slabs (2023-2024 rates)
+        t_slabs = [
+            {"range": "0–50", "rate": 3.25, "limit": 50},
+            {"range": "51–100", "rate": 4.05, "limit": 50},
+            {"range": "101–150", "rate": 5.10, "limit": 50},
+            {"range": "151–200", "rate": 6.95, "limit": 50},
+            {"range": "201–250", "rate": 8.20, "limit": 50},
+        ]
         
+        remaining_kwh = total_kwh
+        for slab in t_slabs:
+            if remaining_kwh <= 0:
+                break
+            units_in_slab = min(remaining_kwh, slab["limit"])
+            amount = units_in_slab * slab["rate"]
+            slabs_breakdown.append({
+                "range": slab["range"],
+                "rate": f"₹{slab['rate']:.2f}",
+                "units": round(units_in_slab, 1),
+                "amount": round(amount, 2)
+            })
+            subtotal += amount
+            remaining_kwh -= units_in_slab
+    else:
+        # Non-Telescopic Slabs (Flat rate applies to ALL units)
+        flat_rate = 0.0
+        range_label = ""
+        
+        if total_kwh <= 300:
+            flat_rate, range_label = 6.20, "0-300 (Non-Telescopic)"
+        elif total_kwh <= 350:
+            flat_rate, range_label = 7.00, "0-350 (Non-Telescopic)"
+        elif total_kwh <= 400:
+            flat_rate, range_label = 7.35, "0-400 (Non-Telescopic)"
+        elif total_kwh <= 500:
+            flat_rate, range_label = 7.60, "0-500 (Non-Telescopic)"
+        else:
+            flat_rate, range_label = 8.50, "Above 500 (Non-Telescopic)"
+            
+        subtotal = total_kwh * flat_rate
         slabs_breakdown.append({
-            "range": slab["range"],
-            "rate": f"₹{slab['rate']:.2f}",
-            "units": round(units_in_slab, 1),
-            "amount": round(amount, 2)
+            "range": range_label,
+            "rate": f"₹{flat_rate:.2f} (Flat)",
+            "units": round(total_kwh, 1),
+            "amount": round(subtotal, 2)
         })
         
-        subtotal += amount
-        remaining_kwh -= units_in_slab
-        
-    duty = subtotal * 0.10
+    duty = subtotal * 0.10  # 10% Electricity Duty
     total = subtotal + duty + fixed_charge
     
     return {
