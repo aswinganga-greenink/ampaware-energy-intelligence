@@ -200,6 +200,10 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False)
     secret_key: str = Field(default="change-me-to-a-64-char-random-secret")
 
+    # --- Seed / Admin ---
+    admin_email: str = Field(default="admin@ampaware.com")
+    admin_password: str = Field(default="password123")
+
     # --- API ---
     api_v1_prefix: str = Field(default="/api/v1")
     backend_cors_origins: list[AnyHttpUrl] | list[str] = Field(default=["*"])
