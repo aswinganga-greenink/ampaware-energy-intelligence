@@ -44,3 +44,4 @@ alembic/versions/__pycache__/
 .DS_Store
 Thumbs.db
 mock_hardware.py
+seed.py
