@@ -69,7 +69,7 @@ class BillingSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="ck_billing_period_valid",
         ),
         CheckConstraint("total_units_kwh >= 0", name="ck_billing_units_nonneg"),
-        CheckConstraint("total_payable >= 0", name="ck_billing_payable_nonneg"),
+        CheckConstraint("total_payable_inr >= 0", name="ck_billing_payable_nonneg"),
         {"comment": "Complete billing calculation snapshots (projected + final)"},
     )
 
