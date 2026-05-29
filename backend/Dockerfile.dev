@@ -1,0 +1,32 @@
+# =============================================================================
+# AmpAware Backend — Development Dockerfile (hot-reload)
+# =============================================================================
+# Used by docker-compose.yml for local development.
+# Source code is bind-mounted from host, so file changes are reflected
+# immediately without rebuilding the image.
+
+FROM python:3.12.7-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements-dev.txt .
+RUN pip install --upgrade pip && pip install -r requirements-dev.txt
+
+EXPOSE 8000
+
+# Development: single worker, hot-reload enabled
+CMD ["uvicorn", "app.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--reload", \
+     "--reload-dir", "app"]

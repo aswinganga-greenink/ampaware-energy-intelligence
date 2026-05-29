@@ -1,0 +1,66 @@
+backend/
+backend/.env                          ← gitignored credentials (copy from .env.example)
+backend/.env.example                  ← template, safe to commit
+backend/alembic.ini                   ← Alembic configuration
+backend/Dockerfile                    ← Production multi-stage Docker image
+backend/Dockerfile.dev                ← Development hot-reload image
+backend/docker-compose.yml            ← Development Compose (Postgres, Redis, backend)
+backend/pyproject.toml                ← pytest, ruff, mypy, coverage config
+backend/requirements.txt              ← Production Python dependencies (pinned)
+backend/requirements-dev.txt          ← Dev + test dependencies
+
+backend/alembic/
+  env.py                              ← Async Alembic migration environment
+  script.py.mako                      ← Migration file template
+  versions/                           ← Migration files go here (Phase 2+)
+
+backend/app/
+  main.py                             ← FastAPI app factory + lifespan manager
+
+  api/
+    v1/
+      router.py                       ← Master v1 router
+      error_handlers.py               ← Global exception → HTTP mapping
+      middleware.py                   ← CorrelationID, RequestLogging, SecurityHeaders
+      endpoints/
+        health.py                     ← GET /health, GET /health/detailed
+
+  core/
+    config.py                         ← Pydantic Settings (all subsystem configs)
+    exceptions.py                     ← Domain exception hierarchy
+    logging.py                        ← Structlog structured logging setup
+
+  db/
+    base.py                           ← DeclarativeBase + UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin
+    session.py                        ← AsyncEngine, session factory, get_db_session()
+    repositories/
+      base.py                         ← Generic BaseRepository[T] with CRUD + soft-delete
+
+  domain/
+    models/                           ← ORM models (Phase 2+)
+    schemas/                          ← Pydantic request/response schemas (Phase 2+)
+    enums/                            ← Python Enum classes (Phase 2+)
+
+  services/                           ← Business logic service classes (Phase 3+)
+
+  infrastructure/
+    redis/
+      client.py                       ← Async Redis client, pool, ping, key namespacing
+    telemetry/                        ← OTel setup (Phase 3+)
+
+  utils/
+    datetime_utils.py                 ← UTC-centric datetime helpers, IST conversion
+    pagination.py                     ← PaginationParams + Page[T] generic response
+
+scripts/
+  init_db.sql                         ← PostgreSQL init (extensions, timezone)
+  redis.conf                          ← Redis production config (AOF, LRU)
+
+tests/
+  conftest.py                         ← Shared fixtures (test app, async client)
+  unit/
+    test_config.py                    ← Settings validation unit tests
+    test_datetime_utils.py            ← Datetime utility unit tests
+  integration/
+    test_health.py                    ← Health endpoint integration tests
+  fixtures/                           ← Shared test data factories (Phase 2+)

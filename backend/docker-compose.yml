@@ -1,0 +1,126 @@
+# =============================================================================
+# AmpAware — Docker Compose (Development)
+# =============================================================================
+#
+# Services:
+#   postgres  — PostgreSQL 16 with persistent volume
+#   redis     — Redis 7 with AOF persistence
+#   backend   — FastAPI application (hot-reload in dev mode)
+#
+# Usage:
+#   docker compose up -d          # start all services
+#   docker compose logs -f        # follow logs
+#   docker compose exec backend bash   # shell into backend
+#   docker compose down -v        # stop and remove volumes
+#
+# For production, use docker-compose.prod.yml which:
+#   - Disables hot-reload
+#   - Uses built Docker image
+#   - Adds resource limits and restart policies
+
+version: "3.9"
+
+x-common-env: &common-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: ampaware
+  POSTGRES_USER: ampaware_user
+  POSTGRES_PASSWORD: dev_password_change_in_prod
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: ""
+  APP_ENV: development
+  DEBUG: "true"
+  LOG_FORMAT: pretty
+  LOG_LEVEL: DEBUG
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16.4-alpine
+    container_name: ampaware-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ampaware
+      POSTGRES_USER: ampaware_user
+      POSTGRES_PASSWORD: dev_password_change_in_prod
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ampaware_user -d ampaware"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    command: >
+      postgres
+        -c max_connections=200
+        -c shared_buffers=256MB
+        -c effective_cache_size=768MB
+        -c maintenance_work_mem=64MB
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=16MB
+        -c default_statistics_target=100
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=200
+        -c log_min_duration_statement=500
+
+  # ---------------------------------------------------------------------------
+  # Redis 7
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.4-alpine
+    container_name: ampaware-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./scripts/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # FastAPI Backend (dev: bind-mount source, hot-reload)
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ampaware-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      SECRET_KEY: dev-secret-key-change-in-production-at-least-64-chars-long
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app                      # hot-reload: mount source directory
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
