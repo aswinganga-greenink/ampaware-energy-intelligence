@@ -21,7 +21,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class DatabaseSettings(BaseSettings):
     """PostgreSQL connection & pool settings."""
 
-    model_config = SettingsConfigDict(env_prefix="POSTGRES_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="POSTGRES_",
+        populate_by_name=True,
+        extra="ignore",
+    )
 
     host: str = Field(default="localhost")
     port: int = Field(default=5432, ge=1, le=65535)
@@ -35,11 +41,7 @@ class DatabaseSettings(BaseSettings):
     pool_recycle: int = Field(default=1800, ge=60, alias="DB_POOL_RECYCLE")
     echo_sql: bool = Field(default=False, alias="DB_ECHO_SQL")
 
-    model_config = SettingsConfigDict(
-        env_prefix="",
-        populate_by_name=True,
-        extra="ignore",
-    )
+    # (removed duplicated model_config below)
 
     @property
     def async_url(self) -> str:
@@ -61,7 +63,12 @@ class DatabaseSettings(BaseSettings):
 class RedisSettings(BaseSettings):
     """Redis connection settings."""
 
-    model_config = SettingsConfigDict(env_prefix="REDIS_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="REDIS_",
+        extra="ignore",
+    )
 
     host: str = Field(default="localhost")
     port: int = Field(default=6379, ge=1, le=65535)
@@ -81,7 +88,12 @@ class RedisSettings(BaseSettings):
 class JWTSettings(BaseSettings):
     """JWT token configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="JWT_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="JWT_",
+        extra="ignore",
+    )
 
     algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=60, ge=1)
@@ -91,7 +103,12 @@ class JWTSettings(BaseSettings):
 class TelemetryIngestionSettings(BaseSettings):
     """Controls on telemetry acceptance."""
 
-    model_config = SettingsConfigDict(env_prefix="TELEMETRY_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="TELEMETRY_",
+        extra="ignore",
+    )
 
     max_future_seconds: int = Field(
         default=60,
@@ -113,7 +130,12 @@ class TelemetryIngestionSettings(BaseSettings):
 class LoggingSettings(BaseSettings):
     """Structured logging configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="LOG_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="LOG_",
+        extra="ignore",
+    )
 
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO"
@@ -127,7 +149,12 @@ class LoggingSettings(BaseSettings):
 class RateLimitSettings(BaseSettings):
     """Rate limiting knobs."""
 
-    model_config = SettingsConfigDict(env_prefix="RATE_LIMIT_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="RATE_LIMIT_",
+        extra="ignore",
+    )
 
     enabled: bool = Field(default=True)
     default_per_minute: int = Field(default=120, ge=1)
@@ -137,7 +164,12 @@ class RateLimitSettings(BaseSettings):
 class OtelSettings(BaseSettings):
     """OpenTelemetry tracing configuration (opt-in)."""
 
-    model_config = SettingsConfigDict(env_prefix="OTEL_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="OTEL_",
+        extra="ignore",
+    )
 
     enabled: bool = Field(default=False)
     service_name: str = Field(default="ampaware-backend")
