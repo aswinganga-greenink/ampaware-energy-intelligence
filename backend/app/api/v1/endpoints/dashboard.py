@@ -53,21 +53,69 @@ async def get_dashboard_summary(
     
     if device_ids:
         latest_reading = await telemetry_repo.get_latest_reading(device_ids[0])
+        
+        # Get today's total kwh
+        from app.db.repositories.energy import EnergyAggregateRepository
+        from datetime import datetime, timezone
+        from app.utils.datetime_utils import to_ist
+        agg_repo = EnergyAggregateRepository(session)
+        now_ist = to_ist(datetime.utcnow())
+        daily_agg = await agg_repo.get_daily_aggregate(device_ids[0], now_ist.date())
+        today_kwh = (float(daily_agg.total_active_energy_wh) / 1000) if daily_agg else 0.0
+
         if latest_reading:
             live_metrics = {
                 "v": float(latest_reading.phase_a_voltage or 0),
                 "a": float(latest_reading.phase_a_current or 0),
                 "w": int(latest_reading.total_active_power_w or 0),
                 "pf": float(latest_reading.total_power_factor or 0),
-                "kwh": 142.6, # Placeholder until Energy aggregates are fully synced
+                "kwh": round(today_kwh, 2),
                 "devices": total_active_devices
             }
     
+        # Get weekly data
+        from datetime import timedelta
+        week_data = []
+        for i in range(6, -1, -1):
+            target_date = now_ist.date() - timedelta(days=i)
+            d_agg = await agg_repo.get_daily_aggregate(device_ids[0], target_date)
+            week_data.append({
+                "d": target_date.strftime("%a"),
+                "kwh": (float(d_agg.total_active_energy_wh) / 1000) if d_agg else 0.0
+            })
+            
+        # Get daily (hourly) load curve
+        day_data = []
+        from zoneinfo import ZoneInfo
+        IST = ZoneInfo("Asia/Kolkata")
+        for h in range(24):
+            # Create IST aware datetime for that hour, then convert to UTC
+            hour_ist = datetime(now_ist.year, now_ist.month, now_ist.day, h, 0, 0, tzinfo=IST)
+            hour_utc = hour_ist.astimezone(timezone.utc)
+            h_agg = await agg_repo.get_hourly_aggregate(device_ids[0], hour_utc)
+            # Power is Energy (Wh) * (3600/3600) -> Average Watts for the hour
+            avg_w = float(h_agg.total_active_energy_wh) if h_agg else 0.0
+            day_data.append({
+                "h": f"{h:02d}:00",
+                "load": round(avg_w)
+            })
+            
+        # Device Breakdown (Mocked realistically based on total for now, since we only have 1 device)
+        device_data = [
+            {"name": "HVAC", "value": 38 if today_kwh > 0 else 0},
+            {"name": "Lighting", "value": 22 if today_kwh > 0 else 0},
+            {"name": "Appliances", "value": 24 if today_kwh > 0 else 0},
+            {"name": "Other", "value": 16 if today_kwh > 0 else 0},
+        ]
+        
     return {
         "metrics": {
             "total_devices": len(device_ids),
             "active_devices": total_active_devices,
-            "live": live_metrics
+            "live": live_metrics,
+            "week_data": week_data if device_ids else [],
+            "day_data": day_data if device_ids else [],
+            "device_data": device_data if device_ids else []
         }
     }
 
@@ -83,31 +131,65 @@ async def get_dashboard_billing(
     """
     Returns projected billing information for the current cycle.
     """
+    from app.db.repositories.energy import EnergyAggregateRepository
+    from datetime import datetime
+    from app.utils.datetime_utils import to_ist
+    import calendar
+
     # 1. Fetch user's devices
     device_repo = DeviceRepository(session)
     user_devices = await device_repo.get_devices_by_owner(current_user.id)
     device_ids = [d.id for d in user_devices]
     
-    # Normally we would fetch the EnergyMonthlyAggregate for the current month
-    # and pass it through the TariffEngineService. 
-    # For initial integration, we'll implement the deterministic logic directly
-    # here to ensure the frontend gets valid data if the database isn't seeded yet.
+    total_kwh = 0.0
+    slabs_breakdown = []
+    subtotal = 0.0
+    duty = 0.0
+    fixed_charge = 65.0
+    total = 0.0
+    cycle_days = []
     
-    # Assume 192 kWh consumed
-    total_kwh = 192.0
-    
-    # Standard KSEB LT-1A slabs
+    if device_ids:
+        agg_repo = EnergyAggregateRepository(session)
+        
+        # Get monthly aggregate for billing
+        now_ist = to_ist(datetime.utcnow())
+        year, month = now_ist.year, now_ist.month
+        
+        # In a real app we'd sum across all devices, but let's just use the first for simplicity
+        monthly_agg = await agg_repo.get_monthly_aggregate(device_ids[0], year, month)
+        
+        if monthly_agg:
+            total_kwh = float(monthly_agg.total_active_energy_wh or 0) / 1000
+            
+            # Fetch daily aggregates to build chart data
+            from calendar import monthrange
+            days_in_month = monthrange(year, month)[1]
+            
+            # Populate cycle_days with actuals
+            for i in range(1, days_in_month + 1):
+                day_date = datetime(year, month, i).date()
+                daily_agg = await agg_repo.get_daily_aggregate(device_ids[0], day_date)
+                actual = (float(daily_agg.total_active_energy_wh) / 1000) if daily_agg else 0.0 if i <= now_ist.day else None
+                forecast = (total_kwh / now_ist.day) * i if now_ist.day > 0 else 0
+                
+                cycle_days.append({
+                    "d": i,
+                    "actual": round(actual, 1) if actual is not None else None,
+                    "forecast": round(forecast, 1)
+                })
+
+    # Standard KSEB LT-1A slabs (Deterministic calculation applied to REAL consumed data)
     fallback_slabs = [
         {"range": "0–50", "rate": 3.15, "limit": 50},
         {"range": "51–100", "rate": 3.70, "limit": 50},
         {"range": "101–150", "rate": 4.80, "limit": 50},
         {"range": "151–200", "rate": 6.40, "limit": 50},
         {"range": "201–250", "rate": 7.60, "limit": 50},
+        {"range": "250+", "rate": 8.80, "limit": 9999},
     ]
     
-    slabs_breakdown = []
     remaining_kwh = total_kwh
-    subtotal = 0.0
     
     for slab in fallback_slabs:
         if remaining_kwh <= 0:
@@ -127,24 +209,12 @@ async def get_dashboard_billing(
         remaining_kwh -= units_in_slab
         
     duty = subtotal * 0.10
-    fixed_charge = 65.0
     total = subtotal + duty + fixed_charge
     
-    # Create forecast data points
-    cycle_days = []
-    for i in range(30):
-        actual = (total_kwh / 30) * (i + 1) if i < 15 else None # Assume we are halfway
-        forecast = (total_kwh / 30) * (i + 1)
-        cycle_days.append({
-            "d": i + 1,
-            "actual": round(actual, 1) if actual is not None else None,
-            "forecast": round(forecast, 1)
-        })
-    
     return {
-        "consumed_kwh": total_kwh,
-        "cycle_days": 30,
-        "avg_per_day": round(total_kwh / 30, 1),
+        "consumed_kwh": round(total_kwh, 2),
+        "cycle_days": now_ist.day,
+        "avg_per_day": round(total_kwh / max(now_ist.day, 1), 1),
         "slabs": slabs_breakdown,
         "subtotal": round(subtotal, 2),
         "duty": round(duty, 2),

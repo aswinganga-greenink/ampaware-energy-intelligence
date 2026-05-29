@@ -18,30 +18,14 @@ const TOOLTIP_STYLE = {
   color: "var(--color-foreground)",
 };
 
-const WEEK = [
-  { d: "Mon", kwh: 18.2 }, { d: "Tue", kwh: 21.4 }, { d: "Wed", kwh: 19.8 },
-  { d: "Thu", kwh: 24.6 }, { d: "Fri", kwh: 22.1 }, { d: "Sat", kwh: 17.3 },
-  { d: "Sun", kwh: 15.9 },
-];
-
-const DEVICES = [
-  { name: "HVAC", value: 38 },
-  { name: "Lighting", value: 22 },
-  { name: "Appliances", value: 24 },
-  { name: "Other", value: 16 },
-];
 const PIE_COLORS = ["var(--color-primary)", "var(--color-success)", "var(--color-accent)", "var(--color-chart-4)"];
 
-const DAY = Array.from({ length: 24 }, (_, h) => ({
-  h: `${String(h).padStart(2, "0")}:00`,
-  load: Math.round(280 + Math.sin(h / 3.2) * 120 + ((h * 53) % 80)),
-}));
-
 function Overview() {
-  const [live, setLive] = useState({ v: 230.4, a: 6.2, w: 1428, pf: 0.97, kwh: 142.6, devices: 24 });
-  const [stream, setStream] = useState(() =>
-    Array.from({ length: 30 }, (_, i) => ({ t: i, w: Math.round(380 + Math.sin(i / 2) * 80 + (i * 19) % 50) }))
-  );
+  const [live, setLive] = useState({ v: 0, a: 0, w: 0, pf: 0, kwh: 0, devices: 0 });
+  const [stream, setStream] = useState(() => Array.from({ length: 30 }, (_, i) => ({ t: i, w: 0 })));
+  const [week, setWeek] = useState<any[]>([]);
+  const [day, setDay] = useState<any[]>([]);
+  const [devices, setDevices] = useState<any[]>([]);
 
   useEffect(() => {
     let id: any;
@@ -49,29 +33,26 @@ function Overview() {
       try {
         const { api } = await import("@/lib/api");
         const res = await api.get("/dashboard/summary");
-        if (res?.metrics?.live) {
-          const l = res.metrics.live;
-          // Only update if we got valid non-zero data, otherwise use the previous or simulated data
-          if (l.v > 0) {
-            setLive(l);
-            setStream((d) => [...d.slice(1), { t: d[d.length - 1].t + 1, w: l.w }]);
-            return;
+        if (res?.metrics) {
+          const m = res.metrics;
+          if (m.live) {
+            setLive({
+              v: m.live.v || 0,
+              a: m.live.a || 0,
+              w: m.live.w || 0,
+              pf: m.live.pf || 0,
+              kwh: m.live.kwh || 0,
+              devices: m.active_devices || 0
+            });
+            setStream((d) => [...d.slice(1), { t: d[d.length - 1].t + 1, w: m.live.w || 0 }]);
           }
+          if (m.week_data) setWeek(m.week_data);
+          if (m.day_data) setDay(m.day_data);
+          if (m.device_data) setDevices(m.device_data);
         }
       } catch (e) {
         console.error("Failed to fetch dashboard metrics", e);
       }
-      
-      // Fallback to simulation if backend has no data or fails
-      setLive((s) => ({
-        v: +(229 + Math.random() * 3).toFixed(1),
-        a: +(5.6 + Math.random() * 1.4).toFixed(2),
-        w: Math.round(1380 + Math.random() * 220),
-        pf: +(0.94 + Math.random() * 0.05).toFixed(2),
-        kwh: +(s.kwh + 0.04).toFixed(2),
-        devices: s.devices,
-      }));
-      setStream((d) => [...d.slice(1), { t: d[d.length - 1].t + 1, w: Math.round(360 + Math.random() * 180) }]);
     };
     
     fetchMetrics(); // Initial fetch
@@ -124,52 +105,59 @@ function Overview() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-card-soft lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">Real-time load</h2>
-              <p className="text-xs text-muted-foreground">Live wattage from your main feeder.</p>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-semibold tabular-nums text-foreground">{live.w} W</div>
-              <div className="inline-flex items-center gap-1 text-xs text-success"><TrendingDown className="h-3 w-3" /> 12% vs avg</div>
+      {/* Bill Estimator Horizontal Strip */}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-primary p-5 sm:p-6 text-primary-foreground shadow-elegant flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Bill estimator</h2>
+          <p className="mt-1 text-sm opacity-80">Projected KSEB charge for the current cycle.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10">
+          <div>
+            <div className="text-xs uppercase tracking-wider opacity-80 mb-1">Projected Total</div>
+            <div className="text-4xl sm:text-5xl font-semibold tabular-nums tracking-tight">₹{projectedBill.toLocaleString("en-IN")}</div>
+            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium bg-primary-foreground/10 px-2 py-1 rounded-md opacity-90">
+              <TrendingUp className="h-3.5 w-3.5" /> 6.4% vs last cycle
             </div>
           </div>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stream} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="loadFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="t" hide />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [`${Math.round(v)} W`, "Load"]} />
-                <Area type="monotone" dataKey="w" stroke="var(--color-primary)" strokeWidth={2} fill="url(#loadFill)" isAnimationActive={false} />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="hidden sm:block w-px h-16 bg-primary-foreground/20"></div>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:text-base">
+            <div className="opacity-80">Consumed</div>
+            <div className="tabular-nums font-semibold text-right">{live.kwh.toFixed(1)} kWh</div>
+            <div className="opacity-80">Forecast</div>
+            <div className="tabular-nums font-semibold text-right">{Math.round(live.kwh * 2.1)} kWh</div>
+            <div className="opacity-80">KSEB Slab</div>
+            <div className="font-semibold text-right">151–200 units</div>
           </div>
         </div>
+      </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-card-soft">
-          <h2 className="text-base font-semibold text-foreground">Bill estimator</h2>
-          <p className="text-xs text-muted-foreground">Projected KSEB charge this cycle.</p>
-          <div className="mt-5 rounded-2xl bg-gradient-primary p-5 text-primary-foreground shadow-elegant">
-            <div className="text-xs uppercase tracking-wider opacity-80">Projected total</div>
-            <div className="mt-1 text-4xl font-semibold tabular-nums">₹{projectedBill.toLocaleString("en-IN")}</div>
-            <div className="mt-1 inline-flex items-center gap-1 text-xs opacity-90">
-              <TrendingUp className="h-3 w-3" /> 6.4% vs last cycle
-            </div>
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-card-soft">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Real-time load</h2>
+            <p className="text-xs text-muted-foreground">Live wattage from your main feeder.</p>
           </div>
-          <dl className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between text-muted-foreground"><dt>Consumed</dt><dd className="tabular-nums text-foreground">{live.kwh.toFixed(1)} kWh</dd></div>
-            <div className="flex justify-between text-muted-foreground"><dt>Forecast</dt><dd className="tabular-nums text-foreground">{Math.round(live.kwh * 2.1)} kWh</dd></div>
-            <div className="flex justify-between text-muted-foreground"><dt>Slab</dt><dd className="text-foreground">151–200 units</dd></div>
-          </dl>
+          <div className="text-right">
+            <div className="text-2xl font-semibold tabular-nums text-foreground">{live.w} W</div>
+            <div className="inline-flex items-center gap-1 text-xs text-success"><TrendingDown className="h-3 w-3" /> 12% vs avg</div>
+          </div>
+        </div>
+        <div className="mt-4 h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={stream} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="loadFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.45} />
+                  <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="t" hide />
+              <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [`${Math.round(v)} W`, "Load"]} />
+              <Area type="monotone" dataKey="w" stroke="var(--color-primary)" strokeWidth={2} fill="url(#loadFill)" isAnimationActive={false} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -179,7 +167,7 @@ function Overview() {
           <p className="text-xs text-muted-foreground">kWh across the last 7 days.</p>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={WEEK} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={week} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="d" stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
@@ -196,17 +184,17 @@ function Overview() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, n: string) => [`${v}%`, n]} />
-                <Pie data={DEVICES} dataKey="value" innerRadius={50} outerRadius={80} paddingAngle={3}>
-                  {DEVICES.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                <Pie data={devices} dataKey="value" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                  {devices.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
           </div>
           <ul className="mt-2 space-y-1.5 text-sm">
-            {DEVICES.map((d, i) => (
+            {devices.map((d, i) => (
               <li key={d.name} className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-muted-foreground">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: PIE_COLORS[i] }} />
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                   {d.name}
                 </span>
                 <span className="tabular-nums text-foreground">{d.value}%</span>
@@ -221,7 +209,7 @@ function Overview() {
         <p className="text-xs text-muted-foreground">Average wattage across 24 hours.</p>
         <div className="mt-4 h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={DAY} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <AreaChart data={day} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="dayFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--color-success)" stopOpacity={0.45} />

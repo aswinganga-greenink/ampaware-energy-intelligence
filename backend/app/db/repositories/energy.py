@@ -69,18 +69,18 @@ class EnergyAggregateRepository:
         stmt = insert(EnergyHourlyAggregate).values(
             device_id=device_id,
             hour_start=hour_start,
-            total_kwh=delta_kwh,
-            day_kwh=day_kwh,
-            peak_kwh=peak_kwh,
-            night_kwh=night_kwh,
+            total_active_energy_wh=delta_kwh * 1000,
+            day_energy_wh=day_kwh * 1000,
+            peak_energy_wh=peak_kwh * 1000,
+            night_energy_wh=night_kwh * 1000,
         )
         stmt = stmt.on_conflict_do_update(
             index_elements=["device_id", "hour_start"],
             set_={
-                "total_kwh": EnergyHourlyAggregate.total_kwh + stmt.excluded.total_kwh,
-                "day_kwh": EnergyHourlyAggregate.day_kwh + stmt.excluded.day_kwh,
-                "peak_kwh": EnergyHourlyAggregate.peak_kwh + stmt.excluded.peak_kwh,
-                "night_kwh": EnergyHourlyAggregate.night_kwh + stmt.excluded.night_kwh,
+                "total_active_energy_wh": EnergyHourlyAggregate.total_active_energy_wh + stmt.excluded.total_active_energy_wh,
+                "day_energy_wh": EnergyHourlyAggregate.day_energy_wh + stmt.excluded.day_energy_wh,
+                "peak_energy_wh": EnergyHourlyAggregate.peak_energy_wh + stmt.excluded.peak_energy_wh,
+                "night_energy_wh": EnergyHourlyAggregate.night_energy_wh + stmt.excluded.night_energy_wh,
                 "updated_at": datetime.now(timezone.utc),
             },
         )
@@ -99,18 +99,18 @@ class EnergyAggregateRepository:
         stmt = insert(EnergyDailyAggregate).values(
             device_id=device_id,
             date=target_date,
-            total_kwh=delta_kwh,
-            day_kwh=day_kwh,
-            peak_kwh=peak_kwh,
-            night_kwh=night_kwh,
+            total_active_energy_wh=delta_kwh * 1000,
+            day_energy_wh=day_kwh * 1000,
+            peak_energy_wh=peak_kwh * 1000,
+            night_energy_wh=night_kwh * 1000,
         )
         stmt = stmt.on_conflict_do_update(
             index_elements=["device_id", "date"],
             set_={
-                "total_kwh": EnergyDailyAggregate.total_kwh + stmt.excluded.total_kwh,
-                "day_kwh": EnergyDailyAggregate.day_kwh + stmt.excluded.day_kwh,
-                "peak_kwh": EnergyDailyAggregate.peak_kwh + stmt.excluded.peak_kwh,
-                "night_kwh": EnergyDailyAggregate.night_kwh + stmt.excluded.night_kwh,
+                "total_active_energy_wh": EnergyDailyAggregate.total_active_energy_wh + stmt.excluded.total_active_energy_wh,
+                "day_energy_wh": EnergyDailyAggregate.day_energy_wh + stmt.excluded.day_energy_wh,
+                "peak_energy_wh": EnergyDailyAggregate.peak_energy_wh + stmt.excluded.peak_energy_wh,
+                "night_energy_wh": EnergyDailyAggregate.night_energy_wh + stmt.excluded.night_energy_wh,
                 "updated_at": datetime.now(timezone.utc),
             },
         )
@@ -131,22 +131,53 @@ class EnergyAggregateRepository:
             device_id=device_id,
             year=year,
             month=month,
-            total_kwh=delta_kwh,
-            day_kwh=day_kwh,
-            peak_kwh=peak_kwh,
-            night_kwh=night_kwh,
+            total_active_energy_wh=delta_kwh * 1000,
+            day_energy_wh=day_kwh * 1000,
+            peak_energy_wh=peak_kwh * 1000,
+            night_energy_wh=night_kwh * 1000,
         )
         stmt = stmt.on_conflict_do_update(
             index_elements=["device_id", "year", "month"],
             set_={
-                "total_kwh": EnergyMonthlyAggregate.total_kwh + stmt.excluded.total_kwh,
-                "day_kwh": EnergyMonthlyAggregate.day_kwh + stmt.excluded.day_kwh,
-                "peak_kwh": EnergyMonthlyAggregate.peak_kwh + stmt.excluded.peak_kwh,
-                "night_kwh": EnergyMonthlyAggregate.night_kwh + stmt.excluded.night_kwh,
+                "total_active_energy_wh": EnergyMonthlyAggregate.total_active_energy_wh + stmt.excluded.total_active_energy_wh,
+                "day_energy_wh": EnergyMonthlyAggregate.day_energy_wh + stmt.excluded.day_energy_wh,
+                "peak_energy_wh": EnergyMonthlyAggregate.peak_energy_wh + stmt.excluded.peak_energy_wh,
+                "night_energy_wh": EnergyMonthlyAggregate.night_energy_wh + stmt.excluded.night_energy_wh,
                 "updated_at": datetime.now(timezone.utc),
             },
         )
         await self._session.execute(stmt)
+
+    async def get_hourly_aggregate(
+        self, device_id: uuid.UUID, hour_start: datetime
+    ) -> EnergyHourlyAggregate | None:
+        stmt = select(EnergyHourlyAggregate).where(
+            EnergyHourlyAggregate.device_id == device_id,
+            EnergyHourlyAggregate.hour_start == hour_start
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_daily_aggregate(
+        self, device_id: uuid.UUID, target_date: date
+    ) -> EnergyDailyAggregate | None:
+        stmt = select(EnergyDailyAggregate).where(
+            EnergyDailyAggregate.device_id == device_id,
+            EnergyDailyAggregate.date == target_date
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_monthly_aggregate(
+        self, device_id: uuid.UUID, year: int, month: int
+    ) -> EnergyMonthlyAggregate | None:
+        stmt = select(EnergyMonthlyAggregate).where(
+            EnergyMonthlyAggregate.device_id == device_id,
+            EnergyMonthlyAggregate.year == year,
+            EnergyMonthlyAggregate.month == month
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
 
     async def get_hourly_in_range(
         self, device_id: uuid.UUID, start: datetime, end: datetime

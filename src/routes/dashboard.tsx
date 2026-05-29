@@ -71,10 +71,10 @@ function DashboardLayout() {
         <div className="border-t border-border p-3">
           <div className="flex items-center gap-3 rounded-xl p-2">
             <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-primary text-sm font-semibold text-primary-foreground">
-              {user.name.slice(0, 1).toUpperCase()}
+              {user.full_name ? user.full_name.slice(0, 1).toUpperCase() : "A"}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-foreground">{user.name}</div>
+              <div className="truncate text-sm font-semibold text-foreground">{user.full_name}</div>
               <div className="truncate text-xs text-muted-foreground">{user.email}</div>
             </div>
             <button
