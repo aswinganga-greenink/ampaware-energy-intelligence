@@ -46,10 +46,10 @@ class BaseRepository(Generic[ModelT]):
 
     async def get_by_id(self, pk: uuid.UUID) -> ModelT | None:
         """Fetch by primary key; returns None if not found or soft-deleted."""
-        stmt = select(self.model).where(
-            self.model.id == pk,  # type: ignore[attr-defined]
-            self.model.is_deleted == False,  # noqa: E712  # type: ignore[attr-defined]
-        )
+        stmt = select(self.model).where(self.model.id == pk)  # type: ignore[attr-defined]
+        if hasattr(self.model, "is_deleted"):
+            stmt = stmt.where(self.model.is_deleted == False)  # noqa: E712  # type: ignore[attr-defined]
+        
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -75,7 +75,7 @@ class BaseRepository(Generic[ModelT]):
     ) -> list[ModelT]:
         """Return a paginated list of records."""
         stmt = select(self.model)
-        if not include_deleted:
+        if not include_deleted and hasattr(self.model, "is_deleted"):
             stmt = stmt.where(self.model.is_deleted == False)  # noqa: E712  # type: ignore[attr-defined]
         stmt = stmt.offset(offset).limit(limit)
         result = await self._session.execute(stmt)
@@ -86,7 +86,7 @@ class BaseRepository(Generic[ModelT]):
         from sqlalchemy import func
 
         stmt = select(func.count()).select_from(self.model)
-        if not include_deleted:
+        if not include_deleted and hasattr(self.model, "is_deleted"):
             stmt = stmt.where(self.model.is_deleted == False)  # noqa: E712  # type: ignore[attr-defined]
         result = await self._session.execute(stmt)
         return result.scalar_one()
@@ -116,6 +116,10 @@ class BaseRepository(Generic[ModelT]):
         Mark a record as deleted without removing the row.
         Preserves full audit trail.
         """
+        if not hasattr(self.model, "is_deleted"):
+            raise NotImplementedError(
+                f"Model {self.model.__name__} does not support soft delete."
+            )
         obj.is_deleted = True  # type: ignore[attr-defined]
         obj.deleted_at = datetime.now(timezone.utc)  # type: ignore[attr-defined]
         self._session.add(obj)
