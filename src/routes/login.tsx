@@ -42,19 +42,22 @@ function LoginPage() {
   };
 
   return <AuthShell title="Welcome back" subtitle="Sign in to your AmpAware workspace.">
-    {/* Demo credentials hint */}
-    <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-sm">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-muted-foreground">
-          <span className="font-medium text-foreground">Demo: </span>
-          demo@ampaware.com&nbsp;/&nbsp;demo1234
+    {/* Demo credentials hint — mobile optimised */}
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+      <p className="mb-2.5 text-xs text-muted-foreground">
+        <span className="font-semibold text-foreground">Try the demo</span>
+        {" "}— no sign-up needed
+      </p>
+      <div className="flex flex-col gap-1.5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <span className="font-mono tracking-tight">
+          demo@ampaware.com&nbsp;·&nbsp;demo1234
         </span>
         <button
           type="button"
           onClick={fillDemo}
-          className="shrink-0 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 sm:w-auto sm:py-1.5"
         >
-          Use demo
+          Use demo →
         </button>
       </div>
     </div>
