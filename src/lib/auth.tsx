@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api } from "./api";
 
 type User = { id: string; name: string; email: string; full_name: string; role: string };
 type AuthCtx = {
@@ -12,31 +11,48 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | null>(null);
 const TOKEN_KEY = "ampaware.auth.token";
+const USER_KEY = "ampaware.auth.user";
+
+// ── Static mock auth ────────────────────────────────────────────────────────
+// Backend is not reachable in this deployment. All auth is handled locally.
+// Replace these functions with real API calls once the backend is live.
+// Demo credentials: demo@ampaware.com / demo1234
+// ────────────────────────────────────────────────────────────────────────────
+
+function makeUser(name: string, email: string): User {
+  return {
+    id: btoa(email).slice(0, 12),
+    name,
+    email,
+    full_name: name,
+    role: "customer",
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
 
-  const fetchUser = async () => {
-    try {
-      const data = await api.get("/auth/me");
-      setUser(data);
-    } catch (e) {
-      setUser(null);
-      localStorage.removeItem(TOKEN_KEY);
-    }
-  };
-
+  // Restore session from localStorage on mount
   useEffect(() => {
-    const init = async () => {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (token) {
-        await fetchUser();
+    const token = localStorage.getItem(TOKEN_KEY);
+    const stored = localStorage.getItem(USER_KEY);
+    if (token && stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
       }
-      setReady(true);
-    };
-    init();
+    }
+    setReady(true);
   }, []);
+
+  function persistSession(u: User) {
+    localStorage.setItem(TOKEN_KEY, "static-mock-token-" + u.id);
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+    setUser(u);
+  }
 
   return (
     <Ctx.Provider
@@ -44,21 +60,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         ready,
         login: async (email, password) => {
-          const formData = new URLSearchParams();
-          formData.append("username", email);
-          formData.append("password", password);
-          
-          const data = await api.post("/auth/login", formData, true);
-          localStorage.setItem(TOKEN_KEY, data.access_token);
-          await fetchUser();
+          // Simulate a brief network delay for realistic UX
+          await new Promise((r) => setTimeout(r, 600));
+
+          if (!email || !password) throw new Error("Email and password are required.");
+          if (password.length < 4) throw new Error("Password must be at least 4 characters.");
+
+          // Accept any valid-looking credentials; use email as display name
+          const displayName =
+            email === "demo@ampaware.com"
+              ? "Demo User"
+              : email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+          persistSession(makeUser(displayName, email));
         },
         signup: async (name, email, password) => {
-          // Fallback mock since signup endpoint isn't implemented on backend yet
-          await new Promise((r) => setTimeout(r, 500));
-          console.warn("Signup is mocked. Use seed data to login.");
+          await new Promise((r) => setTimeout(r, 600));
+          if (!name || !email || !password) throw new Error("All fields are required.");
+          if (password.length < 6) throw new Error("Password must be at least 6 characters.");
+          persistSession(makeUser(name, email));
         },
         logout: () => {
           localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
           setUser(null);
         },
       }}
